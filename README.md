@@ -1,4 +1,9 @@
 # bora-ia
 Repositório para o desenvolvimento  da API que irá gerenciar a IA da aplicação bora-pagar.
 
-Nesse repositório haverá uma API que irá gerenciar prompts da API do Gemini, fazendo seu redirecionamento para Agentes específicos, devolvendo as respostas de forma inteligente.
+
+# Quero rodar
+
+1. Tenha o [conda](https://docs.anaconda.com/free/miniconda/) instalado
+2. `conda env create -f environment.yml`
+3. `fastapi dev main.py`
