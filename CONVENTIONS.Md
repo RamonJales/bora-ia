@@ -1,0 +1,17 @@
+- Código e Commits em inglês
+- Issues/PR templates no Github
+- Documentação em português
+- Não usar comentário para "salvar" código. Se não for usar remova.
+- Todas as funções devem ser comentadas
+- Não é permitido comentário dentro de funções
+- Padrão snake_case
+- Soft delete
+- Padrões HTTP:
+  - PATCH para atualização de informações ao invés de PUT
+  - 201 Created para criação de entidades POST
+  - 200 OK para DELETE
+- Evaluations como TDD
+- Tratamento de exceções é uma prioridade com suporte para log
+- Somente uma pessoa deve ter as credenciais do banco (e READ ONLY)
+- Commits devem seguir o padrão de Conventional Commits
+- Métodos com mais de 10 linhas devem ser repensados
