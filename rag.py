@@ -31,3 +31,6 @@ prompt = ChatPromptTemplate.from_messages(
 
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+response = rag_chain.invoke({"input": "O que é o curso de Arquitetura?!"})
+print(response["answer"])
