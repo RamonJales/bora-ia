@@ -13,7 +13,7 @@ def load_docs():
     files = os.listdir('./data/ppcs')
 
     pdf_files = [pdf_file for pdf_file in files if pdf_file.lower().endswith('.pdf')]
-    print(pdf_files)
+
     docs = []
     for pdf_file in pdf_files:
         file_path = os.path.join('./data/ppcs', pdf_file)
