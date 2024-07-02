@@ -13,7 +13,6 @@ from langchain_groq import ChatGroq
 
 llm = ChatGroq(model="llama3-8b-8192")
 
-# 2. Incorporate the retriever into a question-answering chain.
 system_prompt = (
     "Você é um assistente para tarefas de perguntas e respostas."
     "Use os seguintes trechos de contexto recuperados para responder à pergunta."
@@ -31,6 +30,3 @@ prompt = ChatPromptTemplate.from_messages(
 
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
-
-response = rag_chain.invoke({"input": "O que é o curso de Arquitetura?!"})
-print(response["answer"])
