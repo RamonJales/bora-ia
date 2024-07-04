@@ -35,14 +35,14 @@ llm = ChatGroq(temperature=0, model="llama3-8b-8192").with_structured_output(
 
 tagging_chain = tagging_prompt | llm
 
-def classify(query : str) -> str:
-    result : dict[str,int] = tagging_chain.invoke({"input": query}).dict()
+##def classify(query : str) -> str:
+##    result : dict[str,int] = tagging_chain.invoke({"input": query}).dict()
 
-    for key, value in result:
-        if value >= 6:
-            return "inadequada: feedback " + key
+##    for key, value in result:
+##        if value >= 6:
+##            return "inadequada: feedback " + key
         
-    return "adequada"
+##    return "adequada"
 
     
         
