@@ -6,6 +6,7 @@ from fastapi.responses import RedirectResponse
 from langchain_openai import OpenAIEmbeddings
 
 from rag import rag_chain
+from feedback_classifier import classify
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -17,6 +18,12 @@ app = FastAPI(
     title="Bora IA API",
     version="0.1.0"
 )
+
+@app.get("/feedback_classify")
+async def feedback_classify(query: Annotated[str, Query(max_length=ENDPOINT_QUERY_AI_MAX_SIZE)]):
+    print(len(query))
+    result = classify(query)
+    return result
 
 @app.get("/ai")
 async def ai(query: Annotated[str, Query(max_length=ENDPOINT_QUERY_AI_MAX_SIZE)]):
