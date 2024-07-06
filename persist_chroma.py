@@ -22,7 +22,11 @@ def load_docs():
 
     return docs
 
-def initialize_chroma() -> None:
+def initialize_chroma() -> Chroma:
+
+    load_dotenv()
+
+    os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
 
     docs = load_docs()
 
@@ -30,17 +34,32 @@ def initialize_chroma() -> None:
     splits = text_splitter.split_documents(docs)
     Chroma.from_documents(documents=splits, persist_directory="./chroma_db", embedding=OpenAIEmbeddings(model="text-embedding-3-large"))
 
-def add_ppcs_pdf(*ppc_name : str) -> None:
-    pdf_files = [pdf_file for pdf_file in ppc_name if pdf_file.lower().endswith('.pdf')]
+def load_chroma() -> Chroma:
+
+    load_dotenv()
+
+    os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+    
+    db = Chroma(persist_directory="./chroma_db", embedding_function=OpenAIEmbeddings(model="text-embedding-3-large"))
+
+    files = os.listdir('./data/ppcs')
+
+    pdf_files = [pdf_file for pdf_file in files if pdf_file.lower().endswith('.pdf')]
 
     docs = []
     for pdf_file in pdf_files:
         file_path = os.path.join('./data/ppcs', pdf_file)
-        loader = PyMuPDFLoader(file_path)
-        docs.extend(loader.load())
+        
+        docs_in_db = db.get(where={"source":file_path})
 
-    db = Chroma(persist_directory="./chroma_db", embedding_function=OpenAIEmbeddings(model="text-embedding-3-large"))
-    db.add_documents(documents=docs)
+        if not docs_in_db['ids']:
+            loader = PyMuPDFLoader(file_path)
+            docs.extend(loader.load())
 
-add_ppcs_pdf("PPC_Engenharia_Mecatrnica_Bacharelado_-_Natal_-_Atualizado_em_2018-1.pdf")
+    if docs:
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+        splits = text_splitter.split_documents(docs)
+        db.add_documents(documents=splits)
+
+    return db
 
