@@ -22,13 +22,11 @@ app = FastAPI(
 
 @app.get("/feedback_classify")
 async def feedback_classify(query: Annotated[str, Query(max_length=ENDPOINT_QUERY_FEEDBACK_CLASSIFY_MAX_SIZE)]):
-    print(len(query))
     result = tagging_chain.invoke({"input": query})
     return result
 
 @app.get("/ai")
 async def ai(query: Annotated[str, Query(max_length=ENDPOINT_QUERY_AI_MAX_SIZE)]):
-    print(len(query))
     response = rag_chain.invoke({"input": query})
     return response["answer"]
 
