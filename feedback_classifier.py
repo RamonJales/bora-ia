@@ -7,6 +7,7 @@ import os
 load_dotenv()
 
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_FEEDBACK_KEY")
+ENDPOINT_FEEDBACK_MODEL = os.getenv("ENDPOINT_FEEDBACK_MODEL")
 
 tagging_prompt = ChatPromptTemplate.from_template(
     """
@@ -26,7 +27,7 @@ class Classification(BaseModel):
     ofensivo: int = Field(description= "o quão ofensivo é o texto numa escala de 1 a 10")
     pessoal: int = Field(description= "de 0 a 10, o quão pessoal é a crítica, 0 sendo uma crítica ao professor como profisional e 10 sendo crítica à pessoa")
 
-llm = ChatGroq(temperature=0, model="llama3-8b-8192").with_structured_output(
+llm = ChatGroq(temperature=0, model=ENDPOINT_FEEDBACK_MODEL).with_structured_output(
     Classification
 )
 
