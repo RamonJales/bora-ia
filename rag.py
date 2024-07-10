@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
+
+from persist_chroma import load_chroma
 from retrivier_chroma import retriever
 
 load_dotenv()
@@ -29,4 +31,10 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+def get_rag_chain():
+    db = load_chroma()
+
+    retriever = db.as_retriever()
+    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    return rag_chain
