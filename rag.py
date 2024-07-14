@@ -5,7 +5,6 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 
 from persist_chroma import load_chroma
-from retrivier_chroma import retriever
 
 load_dotenv()
 

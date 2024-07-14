@@ -20,7 +20,6 @@ app = FastAPI(
 
 @app.get("/ai")
 async def ai(query: Annotated[str, Query(max_length=ENDPOINT_QUERY_AI_MAX_SIZE)]):
-    print(len(query))
     response = get_rag_chain().invoke({"input": query})
     return response["answer"]
 
