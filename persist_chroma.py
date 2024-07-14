@@ -32,20 +32,7 @@ def load_docs() -> list[Document]:
 
     return docs
 
-def initialize_chroma() -> Chroma:
-    """
-        Initializes a chroma database and saves it to the persist directory
-
-        Returns: a Chroma database
-    """
-    docs = load_docs()
-
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    splits = text_splitter.split_documents(docs)
-    Chroma.from_documents(documents=splits, persist_directory=PERSIST_DIR, embedding=OpenAIEmbeddings(model=CHROMA_EMBEDDING_MODEL ))
-
-
-def get_changed_files(db : Chroma, dir : str) -> tuple[set[str], set[str]]:
+def get_changed_files(db: Chroma, dir: str) -> tuple[set[str], set[str]]:
     """
         gets mismatched files between the Chroma database and the directory and returns them as two sets
 
