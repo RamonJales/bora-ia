@@ -1,17 +1,18 @@
-from langchain_community.document_loaders import PyMuPDFLoader, Document
+from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_chroma import Chroma
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 import os
 from dotenv import load_dotenv
 
-FILES_DIR = './data/ppcs'
-PERSIST_DIR = "./chroma_db"
-
 load_dotenv()
 
 os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+KNOWLEDGE_PDF_DIR = os.getenv("KNOWLEDGE_PDF_DIR")
+CHROMA_PERSIST_DIR = os.getenv("CHROMA_PERSIST_DIR")
 CHROMA_EMBEDDING_MODEL = os.getenv("CHROMA_EMBEDDING_MODEL")
+
 
 def load_docs() -> list[Document]:
     """
@@ -20,17 +21,18 @@ def load_docs() -> list[Document]:
     Return: list[Document]
     """
 
-    files : list[str] = os.listdir(FILES_DIR)
+    files: list[str] = os.listdir(KNOWLEDGE_PDF_DIR)
 
-    pdf_files : list[str] = [pdf_file for pdf_file in files if pdf_file.lower().endswith('.pdf')]
+    pdf_files: list[str] = [pdf_file for pdf_file in files if pdf_file.lower().endswith('.pdf')]
 
-    docs : list[Document] = []
+    docs: list[Document] = []
     for pdf_file in pdf_files:
-        file_path : str = os.path.join(FILES_DIR, pdf_file)
+        file_path: str = os.path.join(KNOWLEDGE_PDF_DIR, pdf_file)
         loader = PyMuPDFLoader(file_path)
         docs.extend(loader.load())
 
     return docs
+
 
 def get_changed_files(db: Chroma, dir: str) -> tuple[set[str], set[str]]:
     """
@@ -44,8 +46,8 @@ def get_changed_files(db: Chroma, dir: str) -> tuple[set[str], set[str]]:
     
     """
 
-    files : list[str] = os.listdir(dir)
-    pdf_files : set[str] = set([os.path.join(dir, pdf_file) for pdf_file in files if pdf_file.lower().endswith('.pdf')])
+    files: list[str] = os.listdir(dir)
+    pdf_files: set[str] = set([os.path.join(dir, pdf_file) for pdf_file in files if pdf_file.lower().endswith('.pdf')])
     sources = set([metadata["source"] for metadata in db.get()["metadatas"]])
 
     not_changed_files = pdf_files.intersection(sources)
@@ -55,7 +57,7 @@ def get_changed_files(db: Chroma, dir: str) -> tuple[set[str], set[str]]:
     return new_ones, removed_ones
 
 
-def remove_docs(db : Chroma, removed_ones : list[str]) -> None:
+def remove_docs(db: Chroma, removed_ones: list[str]) -> None:
     """
         Removes the documents listed from the database
 
@@ -68,7 +70,7 @@ def remove_docs(db : Chroma, removed_ones : list[str]) -> None:
         db.delete(ids=docs["ids"])
 
 
-def add_docs(db : Chroma, new_ones : list[str]) -> None:
+def add_docs(db: Chroma, new_ones: list[str]) -> None:
     """
         adds the documents listed as embeddings to the chroma database
 
@@ -93,13 +95,12 @@ def load_chroma() -> Chroma:
 
         Returns: a Chroma database
     """
-    
-    db = Chroma(persist_directory=PERSIST_DIR, embedding_function=OpenAIEmbeddings(model=CHROMA_EMBEDDING_MODEL ))
 
-    new_ones, removed_ones = get_changed_files(db, FILES_DIR)
+    db = Chroma(persist_directory=CHROMA_PERSIST_DIR, embedding_function=OpenAIEmbeddings(model=CHROMA_EMBEDDING_MODEL))
+
+    new_ones, removed_ones = get_changed_files(db, KNOWLEDGE_PDF_DIR)
 
     remove_docs(db, removed_ones)
     add_docs(db, new_ones)
 
     return db
-
