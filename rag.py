@@ -3,13 +3,12 @@ from dotenv import load_dotenv
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
-from retrivier_chroma import retriever
+from langchain_groq import ChatGroq
+from persist_chroma import load_chroma
 
 load_dotenv()
 
 os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
-
-from langchain_groq import ChatGroq
 
 llm = ChatGroq(model="llama3-8b-8192")
 
@@ -29,4 +28,11 @@ prompt = ChatPromptTemplate.from_messages(
 )
 
 question_answer_chain = create_stuff_documents_chain(llm, prompt)
-rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+
+def get_rag_chain():
+    db = load_chroma()
+
+    retriever = db.as_retriever()
+    rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+    return rag_chain
