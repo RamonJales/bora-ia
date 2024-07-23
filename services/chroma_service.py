@@ -85,7 +85,9 @@ class ChromaService:
 
     def _update_knowledge(self):
         """
-            TODO: document
+            add or remove RAG knowledge based on knowledge folder new or removed files
+            if the file exists only at chromadb, it was removed
+            if the file exists only at knowledge folder, it is a new one
         """
         directory_only, database_only = self._compare_files()
 
@@ -95,7 +97,7 @@ class ChromaService:
 
     def load_retriever(self) -> VectorStoreRetriever:
         """
-            TODO: document
+            :return: chromadb as a retriever to the RAG
         """
         self._update_knowledge()
 
