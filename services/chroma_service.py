@@ -1,23 +1,18 @@
-#!/usr/bin/env python
-
 """
-    ChromaService.py = implements rules to access the database
-
+    chroma_service.py = implements rules to access the database
 """
 
 __author__ = "Isaac Lourenço, Felipe Holanda"
 
 
+import os
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain_core.documents import Document
-import os
 from dotenv import load_dotenv
 from typing import Iterable
-
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-
-from ChromaRepository import ChromaRepository
+from repositories.chroma_repository import ChromaRepository
 
 load_dotenv()
 
@@ -55,22 +50,22 @@ def split_docs(docs: list[Document]) -> list[Document]:
 class ChromaService:
     def __init__(self, chroma_repository: ChromaRepository = ChromaRepository(),
                  knowledge_directory: str = KNOWLEDGE_PDF_DIR):
-        self.chroma_repository = chroma_repository
-        self.knowledge_directory = knowledge_directory
+        self._chroma_repository = chroma_repository
+        self._knowledge_directory = knowledge_directory
 
-    def get_pdfs_from_dir(self) -> list[str]:
+    def _get_pdfs_paths_from_dir(self) -> list[str]:
         """
-        gets a list of pdfs in the knowledge directory
+        gets a list of pdfs paths in the knowledge directory
         :return: list of file paths to the pdfs in the directory
         """
 
-        files: list[str] = os.listdir(self.knowledge_directory)
-        pdf_files: list[str] = [os.path.join(
-                        self.knowledge_directory, pdf_file) for pdf_file in files if pdf_file.lower().endswith('.pdf')]
+        files: list[str] = os.listdir(self._knowledge_directory)
+        pdfs_paths: list[str] = [os.path.join(
+                        self._knowledge_directory, pdf_file) for pdf_file in files if pdf_file.lower().endswith('.pdf')]
 
-        return pdf_files
+        return pdfs_paths
 
-    def compare_files(self) -> tuple[set[str], set[str]]:
+    def _compare_files(self) -> tuple[set[str], set[str]]:
         """
             gets mismatched files between the Chroma database and the directory and returns them as two sets
 
@@ -78,26 +73,33 @@ class ChromaService:
             the second is the set of files only in the database
         """
 
-        pdf_files_set: set[str] = set(self.get_pdfs_from_dir())
+        paths: set[str] = set(self._get_pdfs_paths_from_dir())
 
-        sources_set: set[str] = set([metadata["source"] for metadata in self.chroma_repository.db.get()["metadatas"]])
-
-        directory_only = pdf_files_set.difference(sources_set)
-        database_only = sources_set.difference(pdf_files_set)
+        sources: set[str] = set(self._chroma_repository.get_sources())
+        
+        directory_only = paths.difference(sources)
+        database_only = sources.difference(paths)
 
         return directory_only, database_only
 
-    def update_repository(self):
-        new_files, removed_files = self.compare_files()
 
-        self.chroma_repository.remove_docs(removed_files)
+    def _update_knowledge(self):
+        """
+            TODO: document
+        """
+        directory_only, database_only = self._compare_files()
 
-        self.chroma_repository.add_docs(split_docs(load_pdfs(new_files)))
+        self._chroma_repository.add_docs(split_docs(load_pdfs(directory_only)))
+        self._chroma_repository.remove_docs(database_only)
+
 
     def load_retriever(self) -> VectorStoreRetriever:
-        self.update_repository()
+        """
+            TODO: document
+        """
+        self._update_knowledge()
 
-        retriever = self.chroma_repository.as_retriever()
+        retriever = self._chroma_repository.as_retriever()
 
         return retriever
 
