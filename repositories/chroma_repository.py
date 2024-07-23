@@ -27,7 +27,8 @@ class ChromaRepository:
 
     def add_docs(self, docs: list[Document]):
         """
-            TODO: document
+        add a list of langchain documents into the chromadb
+        :param docs: list of langchain documents
         """
         if docs:
             self._db.add_documents(documents=docs)
@@ -35,7 +36,8 @@ class ChromaRepository:
 
     def remove_docs(self, sources: Iterable[str]):
         """
-            TODO: document
+        hard remove all langchain documents at database based on its sources metadata
+        :param sources: list of sources metadatas
         """
         if sources:
             for source in sources:
@@ -45,14 +47,14 @@ class ChromaRepository:
 
     def as_retriever(self) -> VectorStoreRetriever:
         """
-            TODO: document
+        :return: chromadb as a vector store retrievier important to the RAG chain
         """
         return self._db.as_retriever()
 
 
     def get_sources(self) -> list[str]:
         """
-            TODO: document
+        :return: list of all source metadata of all documents in the database
         """
         docs = self._db.get()
         sources = [metadata["source"] for metadata in docs["metadatas"]]
