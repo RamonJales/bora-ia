@@ -5,6 +5,7 @@ from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
 from langchain_groq import ChatGroq
 from persist_chroma import load_chroma
+from services.chroma_service import ChromaService
 
 load_dotenv()
 
@@ -33,6 +34,6 @@ question_answer_chain = create_stuff_documents_chain(llm, prompt)
 def get_rag_chain():
     db = load_chroma()
 
-    retriever = db.as_retriever()
+    retriever = ChromaService().load_retriever()
     rag_chain = create_retrieval_chain(retriever, question_answer_chain)
     return rag_chain
