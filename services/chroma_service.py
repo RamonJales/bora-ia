@@ -6,10 +6,10 @@ __author__ = "Isaac Lourenço, Felipe Holanda"
 
 
 import os
-from langchain_community.document_loaders import PyMuPDFLoader
+from langchain_community.document_loaders import PyMuPDFLoader, JSONLoader
 from langchain_core.documents import Document
 from dotenv import load_dotenv
-from typing import Iterable
+from typing import Iterable, Callable
 from langchain_core.vectorstores import VectorStoreRetriever
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from repositories.chroma_repository import ChromaRepository
@@ -17,6 +17,20 @@ from repositories.chroma_repository import ChromaRepository
 load_dotenv()
 
 KNOWLEDGE_PDF_DIR = os.getenv("KNOWLEDGE_PDF_DIR")
+
+
+def split_by_source(file_paths: Iterable[str]) -> tuple[list[str], list[str], list[str]]:
+    """
+        splits the filepaths given by source
+        :param: an iterable containing filepaths
+        :return: a tuple of three members, where the first is the filepaths of ppcs, the second is the file
+        paths of sites, and the third is the filepaths of forums
+    """
+    ppc_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('ppc.pdf')]
+    site_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('site.pdf')]
+    forum_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('.json')]
+
+    return ppc_file_paths, site_file_paths, forum_file_paths
 
 
 def load_pdfs(pdfs: Iterable[str]) -> list[Document]:
@@ -29,6 +43,53 @@ def load_pdfs(pdfs: Iterable[str]) -> list[Document]:
         docs = []
         for pdf_file in pdfs:
             loader = PyMuPDFLoader(pdf_file)
+            docs.extend(loader.load())
+
+        return docs
+
+
+def get_metadata_func(json_path: str) -> Callable[[dict, dict], dict]:
+    """
+        function to generate metadata function
+        :param json_path: path to a json file
+        :return: a function that
+    """
+
+    def metadata_func(message: dict, metadata: dict):
+        """
+            function to adjust metadata of json documents
+            :param message: a message in the forum in dict format
+            :param metadata: the document metadata
+            :return: the new document metadata
+        """
+        metadata["topic"] = message["topic"]
+        metadata["date"] = message["date"]
+        metadata["hour"] = message["hour"]
+        metadata["author"] = message["author"]
+        metadata["file_path"] = json_path
+        metadata["source"] = " ".join(json_path[:-5].split("/")[-1].split("_"))
+
+        return metadata
+
+    return metadata_func
+
+
+def load_jsons(json_paths: Iterable[str]) -> list[Document]:
+    """
+    loads the jsons file_paths into Documents
+    :param json_paths: list of filepaths to json files
+    :return: list of Documents
+    """
+    if json_paths:
+        docs = []
+        for json_path in json_paths:
+            loader = JSONLoader(
+                        file_path=json_path,
+                        jq_schema='.[]',
+                        content_key='content',
+                        metadata_func=get_metadata_func(json_path)
+                        )
+
             docs.extend(loader.load())
 
         return docs
