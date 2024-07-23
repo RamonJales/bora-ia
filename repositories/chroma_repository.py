@@ -34,29 +34,29 @@ class ChromaRepository:
             self._db.add_documents(documents=docs)
 
 
-    def remove_docs(self, sources: Iterable[str]):
+    def remove_docs(self, file_paths: Iterable[str]):
         """
         hard remove all langchain documents at database based on its sources metadata
-        :param sources: list of sources metadatas
+        :param file_paths: list of sources metadatas
         """
-        if sources:
-            for source in sources:
-                docs = self._db.get(where={"source": source})
+        if file_paths:
+            for file_path in file_paths:
+                docs = self._db.get(where={"file_path": file_path})
                 self._db.delete(ids=docs["ids"])
 
 
     def as_retriever(self) -> VectorStoreRetriever:
         """
-        :return: chromadb as a vector store retrievier important to the RAG chain
+        :return: chromadb as a vector store retriever important to the RAG chain
         """
         return self._db.as_retriever()
 
 
-    def get_sources(self) -> list[str]:
+    def get_file_paths(self) -> list[str]:
         """
-        :return: list of all source metadata of all documents in the database
+        :return: list of all file_path metadata of all documents in the database
         """
         docs = self._db.get()
-        sources = [metadata["source"] for metadata in docs["metadatas"]]
+        sources = [metadata["file_path"] for metadata in docs["metadatas"]]
 
         return sources

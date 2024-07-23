@@ -136,7 +136,7 @@ class ChromaService:
 
         paths: set[str] = set(self._get_pdfs_paths_from_dir())
 
-        sources: set[str] = set(self._chroma_repository.get_sources())
+        sources: set[str] = set(self._chroma_repository.get_file_paths())
         
         directory_only = paths.difference(sources)
         database_only = sources.difference(paths)
@@ -165,4 +165,3 @@ class ChromaService:
         retriever = self._chroma_repository.as_retriever()
 
         return retriever
-
