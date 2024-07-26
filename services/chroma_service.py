@@ -19,18 +19,17 @@ load_dotenv()
 KNOWLEDGE_PDF_DIR = os.getenv("KNOWLEDGE_PDF_DIR")
 
 
-def split_by_source(file_paths: Iterable[str]) -> tuple[list[str], list[str], list[str]]:
+def split_by_type(file_paths: Iterable[str]) -> tuple[list[str], list[str]]:
     """
-        splits the filepaths given by source
+        splits the filepaths given by type
         :param: an iterable containing filepaths
-        :return: a tuple of three members, where the first is the filepaths of ppcs, the second is the file
-        paths of sites, and the third is the filepaths of forums
+        :return: a tuple of two members, where the first is the filepaths of pdfs, the second is the file
+        paths of jsons
     """
-    ppc_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('ppc.pdf')]
-    site_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('site.pdf')]
-    forum_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('.json')]
+    pdfs_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('.pdf')]
+    jsons_file_paths = [file_path for file_path in file_paths if file_path.lower().endswith('.json')]
 
-    return ppc_file_paths, site_file_paths, forum_file_paths
+    return pdfs_file_paths, jsons_file_paths
 
 
 def load_pdfs(pdfs: Iterable[str]) -> list[Document]:
@@ -67,7 +66,7 @@ def get_metadata_func(json_path: str) -> Callable[[dict, dict], dict]:
         metadata["hour"] = message["hour"]
         metadata["author"] = message["author"]
         metadata["file_path"] = json_path
-        metadata["source"] = " ".join(json_path[:-5].split("/")[-1].split("_"))
+        metadata["source"] = json_path
 
         return metadata
 
@@ -114,17 +113,17 @@ class ChromaService:
         self._chroma_repository = chroma_repository
         self._knowledge_directory = knowledge_directory
 
-    def _get_pdfs_paths_from_dir(self) -> list[str]:
+    def _get_paths_from_dir(self) -> list[str]:
         """
-        gets a list of pdfs paths in the knowledge directory
-        :return: list of file paths to the pdfs in the directory
+        gets a list of paths in the knowledge directory
+        :return: list of file paths to the files in the directory
         """
 
         files: list[str] = os.listdir(self._knowledge_directory)
-        pdfs_paths: list[str] = [os.path.join(
-                        self._knowledge_directory, pdf_file) for pdf_file in files if pdf_file.lower().endswith('.pdf')]
-
-        return pdfs_paths
+        paths: list[str] = [os.path.join(
+                    self._knowledge_directory, file) for file in files if file.lower().endswith('.pdf') or
+                                                                          file.lower().endswith('.json')]
+        return paths
 
     def _compare_files(self) -> tuple[set[str], set[str]]:
         """
@@ -134,7 +133,7 @@ class ChromaService:
             the second is the set of files only in the database
         """
 
-        paths: set[str] = set(self._get_pdfs_paths_from_dir())
+        paths: set[str] = set(self._get_paths_from_dir())
 
         sources: set[str] = set(self._chroma_repository.get_file_paths())
         
@@ -142,7 +141,6 @@ class ChromaService:
         database_only = sources.difference(paths)
 
         return directory_only, database_only
-
 
     def _update_knowledge(self):
         """
@@ -152,9 +150,11 @@ class ChromaService:
         """
         directory_only, database_only = self._compare_files()
 
-        self._chroma_repository.add_docs(split_docs(load_pdfs(directory_only)))
-        self._chroma_repository.remove_docs(database_only)
+        pdfs_paths, jsons_paths = split_by_type(directory_only)
 
+        self._chroma_repository.add_docs(split_docs(load_pdfs(pdfs_paths)))
+        self._chroma_repository.add_docs(split_docs(load_jsons(jsons_paths)))
+        self._chroma_repository.remove_docs(database_only)
 
     def load_retriever(self) -> VectorStoreRetriever:
         """
