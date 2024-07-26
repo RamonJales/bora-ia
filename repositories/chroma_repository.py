@@ -31,7 +31,11 @@ class ChromaRepository:
         :param docs: list of langchain documents
         """
         if docs:
-            self._db.add_documents(documents=docs)
+            if len(docs) < 40_000:
+                self._db.add_documents(documents=docs)
+            else:
+                for i in range(0, len(docs), 40_000):
+                    self._db.add_documents(docs[i:40_000+i])
 
 
     def remove_docs(self, file_paths: Iterable[str]):
@@ -42,8 +46,12 @@ class ChromaRepository:
         if file_paths:
             for file_path in file_paths:
                 docs = self._db.get(where={"file_path": file_path})
-                self._db.delete(ids=docs["ids"])
 
+                if len(docs) < 40_000:
+                    self._db.delete(ids=docs["ids"])
+                else:
+                    for i in range(0, len(docs), 40_000):
+                        self._db.delete(ids=docs["ids"][i:40_000+i])
 
     def as_retriever(self) -> VectorStoreRetriever:
         """
