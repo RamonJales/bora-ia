@@ -29,7 +29,11 @@ def load_pdfs(pdfs: Iterable[str]) -> list[Document]:
         docs = []
         for pdf_file in pdfs:
             loader = PyMuPDFLoader(pdf_file)
-            docs.extend(loader.load())
+            pages = loader.load()
+            for page in pages:
+                page.metadata["title"] = os.path.basename(pdf_file).removesuffix(".pdf")
+                
+            docs.extend(pages)
 
         return docs
 
