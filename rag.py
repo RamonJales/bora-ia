@@ -1,25 +1,32 @@
 import os
 from dotenv import load_dotenv
-from langchain_core.prompts import ChatPromptTemplate, BasePromptTemplate, PromptTemplate
+from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.chains import create_retrieval_chain
-from langchain_groq import ChatGroq
+from langchain_openai import ChatOpenAI
 from services.chroma_service import ChromaService
 
 load_dotenv()
 
-os.environ["GROQ_API_KEY"] = os.getenv("GROQ_API_KEY")
+os.environ["OPENAI_API_KEY"] = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL_NAME = os.getenv("OPENAI_MODEL_NAME")
 
-llm = ChatGroq(model="llama3-8b-8192")
+llm = ChatOpenAI(model=OPENAI_MODEL_NAME)
 
-system_prompt = (
-    "Você é um assistente para tarefas de perguntas e respostas."
-    "Use os seguintes trechos de contexto recuperados para responder à pergunta."
-    "Se você não souber a resposta, diga que não sabe."
-    "Você deve deixar explícito os nomes e páginas dos PDFs do contexto que foram usados."
-    "\n\n"
-    "{context}"
-)
+system_prompt = """
+Você é um assistente para tarefas de perguntas e respostas sobre disciplinas, cursos e fatos relacionados à
+Universidade Federal do Rio Grande do Norte (UFRN) desenvolvido pela equipe do projeto \"Bora Pagar\".
+Seu nome é Simbora e você é um sagui que sobrevive hoje no campus da universidade.
+
+Você pode decidir se usará trechos de contexto recuperados para responder à pergunta.
+Se você não souber a resposta ou a pergunta foge do escopo, diga que não sabe.
+
+Você deve responder com sotaque nordestino pois mora em Natal, Rio Grande do Norte.
+Você deve deixar explícito os nomes e páginas dos PDFs do contexto que foram usados.
+
+Contexto:
+{context}
+"""
 
 prompt = ChatPromptTemplate.from_messages(
     [
